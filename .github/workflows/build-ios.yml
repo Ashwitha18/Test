@@ -50,26 +50,29 @@ jobs:
             -sdk iphonesimulator \
             -derivedDataPath ./build
 
-      # 🧩 NEW STEP — print directories so we can see where the .app is
-      - name: Debug: list all build outputs
+      - name: Debug: list build outputs
         run: |
-          echo "=== Build directory tree ==="
+          echo "=== Searching for .app under test-ios-app/ios/App/build ==="
           cd test-ios-app/ios/App
-          find . -type d -name "*.app" || echo "No .app found"
-          echo "=== Full listing under build ==="
-          ls -R build || true
+          find build -type d -name "*.app" -print || echo "No .app found"
 
-      - name: Try to zip the built .app
+      - name: Zip the built .app (place zip at repo root)
         run: |
           cd test-ios-app/ios/App
           APP_PATH=$(find build -type d -name "*.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "❌ No .app found. Check above logs for directory tree."
+            echo "❌ No .app found. Check previous logs for details."
+            ls -R build || true
             exit 1
           fi
-          echo "✅ Found app at $APP_PATH"
-          zip -r ../../../../app-simulator.zip "$APP_PATH"
-          ls -lh ../../../../
+          echo "✅ Found app at: $APP_PATH"
+          APP_DIR=$(dirname "$APP_PATH")
+          APP_NAME=$(basename "$APP_PATH")
+          cd "$APP_DIR"
+          # create zip at repository root
+          zip -r "$GITHUB_WORKSPACE/app-simulator.zip" "$APP_NAME"
+          echo "Created zip at $GITHUB_WORKSPACE/app-simulator.zip"
+          ls -lh "$GITHUB_WORKSPACE/app-simulator.zip" || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
