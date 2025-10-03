@@ -10,44 +10,36 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
         working-directory: test-ios-app
 
-      # 4️⃣ Build React app
       - name: Build React app
         run: npm run build
         working-directory: test-ios-app
 
-      # 5️⃣ Install Capacitor & sync iOS
       - name: Install Capacitor & sync iOS
         run: |
           npm install @capacitor/cli @capacitor/core @capacitor/ios --no-save
           npx cap sync ios
         working-directory: test-ios-app
 
-      # 6️⃣ Ensure CocoaPods installed
       - name: Ensure CocoaPods is installed
         run: sudo gem install cocoapods
 
-      # 7️⃣ Install iOS pods
       - name: Install iOS pods
         run: |
           cd test-ios-app/ios/App
           pod install --repo-update
 
-      # 8️⃣ Build the .app for simulator
       - name: Build iOS Simulator app
         run: |
           cd test-ios-app/ios/App
@@ -58,21 +50,27 @@ jobs:
             -sdk iphonesimulator \
             -derivedDataPath ./build
 
-      # 9️⃣ Zip the .app dynamically
-      - name: Zip the built .app for Appetize
+      # 🧩 NEW STEP — print directories so we can see where the .app is
+      - name: Debug: list all build outputs
         run: |
-          cd test-ios-app/ios/App/build/Build/Products
-          APP_PATH=$(find . -type d -name "*.app" | head -n 1)
+          echo "=== Build directory tree ==="
+          cd test-ios-app/ios/App
+          find . -type d -name "*.app" || echo "No .app found"
+          echo "=== Full listing under build ==="
+          ls -R build || true
+
+      - name: Try to zip the built .app
+        run: |
+          cd test-ios-app/ios/App
+          APP_PATH=$(find build -type d -name "*.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "❌ No .app found. Build failed."
-            ls -R .
+            echo "❌ No .app found. Check above logs for directory tree."
             exit 1
           fi
           echo "✅ Found app at $APP_PATH"
-          zip -r ../../../../../app-simulator.zip "$APP_PATH"
-          ls -lh ../../../../../
+          zip -r ../../../../app-simulator.zip "$APP_PATH"
+          ls -lh ../../../../
 
-      # 🔟 Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
