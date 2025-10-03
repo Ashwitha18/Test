@@ -69,7 +69,6 @@ jobs:
           APP_DIR=$(dirname "$APP_PATH")
           APP_NAME=$(basename "$APP_PATH")
           cd "$APP_DIR"
-          # create zip at repository root
           zip -r "$GITHUB_WORKSPACE/app-simulator.zip" "$APP_NAME"
           echo "Created zip at $GITHUB_WORKSPACE/app-simulator.zip"
           ls -lh "$GITHUB_WORKSPACE/app-simulator.zip" || true
