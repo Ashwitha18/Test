@@ -50,7 +50,7 @@ jobs:
             -sdk iphonesimulator \
             -derivedDataPath ./build
 
-      - name: Debug: list build outputs
+      - name: Debug list build outputs
         run: |
           echo "=== Searching for .app under test-ios-app/ios/App/build ==="
           cd test-ios-app/ios/App
