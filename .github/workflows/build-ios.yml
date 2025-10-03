@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '20'
 
-      # 3️⃣ Install React app dependencies
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
         working-directory: test-ios-app
@@ -33,12 +33,11 @@ jobs:
       # 5️⃣ Install Capacitor & sync iOS
       - name: Install Capacitor & sync iOS
         run: |
-          npm install @capacitor/cli @capacitor/core --no-save
-          npm install @capacitor/ios --no-save
+          npm install @capacitor/cli @capacitor/core @capacitor/ios --no-save
           npx cap sync ios
         working-directory: test-ios-app
 
-      # 6️⃣ Ensure CocoaPods is installed
+      # 6️⃣ Ensure CocoaPods installed
       - name: Ensure CocoaPods is installed
         run: sudo gem install cocoapods
 
@@ -48,32 +47,34 @@ jobs:
           cd test-ios-app/ios/App
           pod install --repo-update
 
-      # 8️⃣ Build iOS Simulator .app
-      - name: Build iOS Simulator .app
+      # 8️⃣ Build the .app for simulator
+      - name: Build iOS Simulator app
         run: |
-           cd test-ios-app/ios/App
-            xcodebuild \
-              -workspace App.xcworkspace \
-              -scheme App \
-              -configuration Release \
-              -sdk iphonesimulator \
-              -derivedDataPath ./build
+          cd test-ios-app/ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath ./build
 
-
-      # 9️⃣ Zip the built app (correct path)
-      - name: Zip the built app
+      # 9️⃣ Zip the .app dynamically
+      - name: Zip the built .app for Appetize
         run: |
-         cd test-ios-app/ios/App/build/Build/Products
+          cd test-ios-app/ios/App/build/Build/Products
           APP_PATH=$(find . -type d -name "*.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "❌ No .app found. Build may have failed."
+            echo "❌ No .app found. Build failed."
+            ls -R .
             exit 1
           fi
-          zip -r ../../../app-simulator.zip "$APP_PATH"
+          echo "✅ Found app at $APP_PATH"
+          zip -r ../../../../../app-simulator.zip "$APP_PATH"
+          ls -lh ../../../../../
 
       # 🔟 Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-simulator-app
-          path: test-ios-app/app-simulator.zip
+          path: app-simulator.zip
