@@ -10,22 +10,27 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install React app dependencies
+      # 3️⃣ Install React app dependencies
+      - name: Install dependencies
         run: npm install
         working-directory: test-ios-app
 
+      # 4️⃣ Build React app
       - name: Build React app
         run: npm run build
         working-directory: test-ios-app
 
+      # 5️⃣ Install Capacitor & sync iOS
       - name: Install Capacitor & sync iOS
         run: |
           npm install @capacitor/cli @capacitor/core --no-save
@@ -33,14 +38,17 @@ jobs:
           npx cap sync ios
         working-directory: test-ios-app
 
+      # 6️⃣ Ensure CocoaPods is installed
       - name: Ensure CocoaPods is installed
         run: sudo gem install cocoapods
 
+      # 7️⃣ Install iOS pods
       - name: Install iOS pods
         run: |
           cd test-ios-app/ios/App
           pod install --repo-update
 
+      # 8️⃣ Build iOS Simulator .app
       - name: Build iOS Simulator .app
         run: |
           cd test-ios-app/ios/App
@@ -51,13 +59,16 @@ jobs:
             -sdk iphonesimulator \
             -derivedDataPath build
 
-      - name: Zip the built app
+      # 9️⃣ Zip only App.app folder correctly for Appetize
+      - name: Zip the built app (Appetize format)
         run: |
           cd test-ios-app/ios/App/build/Build/Products/Release-iphonesimulator
-          zip -r app-simulator.zip *.app
+          APP_NAME=$(ls -d *.app | head -n 1)
+          zip -r ../../../../../app-simulator.zip "$APP_NAME"
 
+      # 🔟 Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-simulator-app
-          path: test-ios-app/ios/App/build/Build/Products/Release-iphonesimulator/app-simulator.zip
+          path: app-simulator.zip
