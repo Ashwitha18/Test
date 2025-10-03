@@ -1,0 +1,60 @@
+name: Build iOS Simulator App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]     # or [ mobile ] if that’s your branch
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Install Capacitor & sync iOS
+        run: |
+          npm install @capacitor/cli @capacitor/core --no-save
+          npm install @capacitor/ios --no-save
+          npx cap sync ios
+
+      - name: Ensure CocoaPods is installed
+        run: sudo gem install cocoapods
+
+      - name: Install iOS pods
+        run: |
+          cd ios/App
+          pod install --repo-update
+
+      - name: Build iOS Simulator .app
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build
+
+      - name: Zip the built app
+        run: |
+          cd ios/App/build/Build/Products/Release-iphonesimulator
+          zip -r app-simulator.zip *.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-simulator-app
+          path: ios/App/build/Build/Products/Release-iphonesimulator/app-simulator.zip
