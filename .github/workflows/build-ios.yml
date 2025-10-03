@@ -51,20 +51,25 @@ jobs:
       # 8️⃣ Build iOS Simulator .app
       - name: Build iOS Simulator .app
         run: |
-          cd test-ios-app/ios/App
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -sdk iphonesimulator \
-            -derivedDataPath build
+           cd test-ios-app/ios/App
+            xcodebuild \
+              -workspace App.xcworkspace \
+              -scheme App \
+              -configuration Release \
+              -sdk iphonesimulator \
+              -derivedDataPath ./build
+
 
       # 9️⃣ Zip the built app (correct path)
       - name: Zip the built app
         run: |
-          cd test-ios-app/ios/App/build/Build/Products/Release-iphonesimulator
-          APP_NAME=$(ls -d *.app | head -n 1)
-          zip -r ../../../../../../app-simulator.zip "$APP_NAME"
+         cd test-ios-app/ios/App/build/Build/Products
+          APP_PATH=$(find . -type d -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ No .app found. Build may have failed."
+            exit 1
+          fi
+          zip -r ../../../app-simulator.zip "$APP_PATH"
 
       # 🔟 Upload artifact
       - name: Upload artifact
