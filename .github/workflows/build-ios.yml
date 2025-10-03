@@ -33,6 +33,7 @@ jobs:
       # 5️⃣ Install Capacitor & sync iOS
       - name: Install Capacitor & sync iOS
         run: |
+          cd test-ios-app
           npm install @capacitor/cli @capacitor/core --no-save
           npm install @capacitor/ios --no-save
           npx cap sync ios
@@ -45,13 +46,13 @@ jobs:
       # 7️⃣ Install iOS pods
       - name: Install iOS pods
         run: |
-          cd ios/App
+          cd test-ios-app/ios/App
           pod install --repo-update
 
       # 8️⃣ Build iOS Simulator .app
       - name: Build iOS Simulator .app
         run: |
-          cd ios/App
+          cd test-ios-app/ios/App
           xcodebuild \
             -workspace App.xcworkspace \
             -scheme App \
@@ -62,7 +63,7 @@ jobs:
       # 9️⃣ Zip the built app
       - name: Zip the built app
         run: |
-          cd ios/App/build/Build/Products/Release-iphonesimulator
+          cd test-ios-app/ios/App/build/Build/Products/Release-iphonesimulator
           zip -r app-simulator.zip *.app
 
       # 🔟 Upload artifact
@@ -70,4 +71,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-simulator-app
-          path: ios/App/build/Build/Products/Release-iphonesimulator/app-simulator.zip
+          path: test-ios-app/ios/App/build/Build/Products/Release-iphonesimulator/app-simulator.zip
